@@ -1,0 +1,9 @@
+node_modules/
+release/
+dist/
+build/
+assets/legacy-*.csv
+assets/legacy-*.json
+assets/*.docx
+*.log
+.env

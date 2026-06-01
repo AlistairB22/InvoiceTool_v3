@@ -1,0 +1,64 @@
+{
+  "name": "invoice-tool-v3",
+  "version": "3.0.0",
+  "description": "Local desktop invoice tool with legacy data migration and GitHub auto-updates.",
+  "main": "src/main.js",
+  "author": "Invoice Tool",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "lint": "node scripts/smoke-test.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "docxtemplater": "^3.68.7",
+    "electron-updater": "^6.6.2",
+    "pizzip": "^3.2.0"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.local.invoicetool",
+    "productName": "Invoice Tool",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "!assets/legacy-*",
+      "!assets/*.docx",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/InvoiceAppIcon.ico",
+      "publisherName": "Invoice Tool"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Invoice Tool"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "AlistairB22",
+        "repo": "InvoiceTool_v3"
+      }
+    ]
+  }
+}

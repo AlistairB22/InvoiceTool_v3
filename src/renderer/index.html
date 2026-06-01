@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice Tool</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">IT</div>
+        <div>
+          <h1>Invoice Tool</h1>
+          <p id="statusText">Local data ready</p>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-button active" data-view="invoiceView">New Invoice</button>
+        <button class="nav-button" data-view="historyView">Invoice History</button>
+        <button class="nav-button" data-view="contactsView">Contacts</button>
+        <button class="nav-button" data-view="expensesView">Expenses</button>
+        <button class="nav-button" data-view="reportsView">Reports</button>
+        <button class="nav-button" data-view="settingsView">Settings</button>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="openOutputButton" class="secondary">Open Outputs</button>
+        <button id="updateButton" class="secondary">Check Updates</button>
+      </div>
+    </aside>
+
+    <main>
+      <section id="invoiceView" class="view active">
+        <header class="page-header">
+          <div>
+            <h2>New Invoice</h2>
+            <p>Create a regular or HA/YP invoice and save it locally.</p>
+          </div>
+          <div class="invoice-number">
+            <span id="invoiceTypeLabel">Regular</span>
+            <strong id="nextInvoiceNumber">-</strong>
+          </div>
+        </header>
+
+        <div class="invoice-layout">
+          <section class="panel">
+            <h3>Client</h3>
+            <div class="field">
+              <label for="clientName">Client name</label>
+              <input id="clientName" list="clientSuggestions" autocomplete="off" />
+              <datalist id="clientSuggestions"></datalist>
+            </div>
+            <div class="field">
+              <label for="jobDescription">Job description</label>
+              <input id="jobDescription" />
+            </div>
+            <div class="split">
+              <div class="field">
+                <label for="vendorNumber">Vendor number</label>
+                <input id="vendorNumber" />
+              </div>
+              <div class="field">
+                <label for="postcode">Postcode</label>
+                <input id="postcode" />
+              </div>
+            </div>
+            <div class="field"><label for="address1">Address line 1</label><input id="address1" /></div>
+            <div class="field"><label for="address2">Address line 2</label><input id="address2" /></div>
+            <div class="field"><label for="address3">Address line 3</label><input id="address3" /></div>
+            <div class="field"><label for="address4">Address line 4</label><input id="address4" /></div>
+            <button id="saveContactFromInvoice" class="secondary">Save Contact</button>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title-row">
+              <h3>Line Items <span id="lineCountBadge" class="line-count-badge">0/4</span></h3>
+              <div class="invoice-options">
+                <span>Invoice options</span>
+                <label><input type="checkbox" id="haypInvoice" /> HA/YP</label>
+                <label><input type="checkbox" id="pdfNeeded" checked /> PDF</label>
+              </div>
+            </div>
+            <div class="line-form">
+              <div class="field"><label for="lineDate">Date</label><input type="date" id="lineDate" /></div>
+              <div class="field wide"><label for="lineDescription">Description</label><input id="lineDescription" /></div>
+              <div class="field"><label for="linePrice">Price</label><input id="linePrice" type="number" min="0" step="0.01" /></div>
+              <div class="field"><label for="lineMiles">Miles</label><input id="lineMiles" type="number" min="0" step="1" /></div>
+              <button id="addLineButton">Add</button>
+            </div>
+            <table>
+              <thead><tr><th>Date</th><th>Description</th><th>Price</th><th>Miles</th><th>Total</th><th></th></tr></thead>
+              <tbody id="lineItemsBody"></tbody>
+            </table>
+            <div class="total-row">
+              <span>Total</span>
+              <strong id="invoiceTotal">£0.00</strong>
+            </div>
+            <button id="createInvoiceButton" class="primary">
+              <span class="button-spinner" aria-hidden="true"></span>
+              <span id="createInvoiceButtonText">Create Invoice</span>
+            </button>
+          </section>
+        </div>
+      </section>
+
+      <section id="historyView" class="view">
+        <header class="page-header"><div><h2>Invoice History</h2><p>Created and migrated invoice records.</p></div></header>
+        <section class="panel">
+          <table>
+            <thead><tr><th>Date</th><th>Client</th><th>Type</th><th>Number</th><th>Total</th><th>Miles</th><th>Files</th></tr></thead>
+            <tbody id="invoiceHistoryBody"></tbody>
+          </table>
+        </section>
+      </section>
+
+      <section id="contactsView" class="view">
+        <header class="page-header"><div><h2>Contacts</h2><p>Saved clients migrated from the old app and new contacts.</p></div></header>
+        <section class="panel">
+          <table>
+            <thead><tr><th>Name</th><th>Vendor</th><th>Postcode</th><th>Address</th><th></th></tr></thead>
+            <tbody id="contactsBody"></tbody>
+          </table>
+        </section>
+      </section>
+
+      <section id="expensesView" class="view">
+        <header class="page-header"><div><h2>Expenses</h2><p>Track costs for monthly reports.</p></div></header>
+        <section class="panel">
+          <div class="expense-form">
+            <div class="field"><label for="expenseDate">Date</label><input type="date" id="expenseDate" /></div>
+            <div class="field"><label for="expenseCategory">Category</label><select id="expenseCategory"><option>Travel</option><option>Equipment</option><option>Software</option><option>Meals</option><option>Other</option></select></div>
+            <div class="field wide"><label for="expenseDescription">Description</label><input id="expenseDescription" /></div>
+            <div class="field"><label for="expenseCost">Cost</label><input type="number" min="0" step="0.01" id="expenseCost" /></div>
+            <button id="addExpenseButton">Add</button>
+          </div>
+          <table>
+            <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Cost</th><th></th></tr></thead>
+            <tbody id="expensesBody"></tbody>
+          </table>
+        </section>
+      </section>
+
+      <section id="reportsView" class="view">
+        <header class="page-header"><div><h2>Reports</h2><p>Export CSV reports for revenue and monthly revenue/expenses.</p></div></header>
+        <section class="panel report-grid">
+          <div>
+            <h3>Revenue Report</h3>
+            <p>Monthly revenue totals across all saved invoice records.</p>
+            <button id="revenueReportButton">Export Revenue</button>
+          </div>
+          <div>
+            <h3>Monthly Report</h3>
+            <p>Invoice revenue, miles, and expenses for a selected month.</p>
+            <div class="report-controls">
+              <input id="reportMonth" type="month" />
+              <button id="monthlyReportButton">Export Month</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="settingsView" class="view">
+        <header class="page-header"><div><h2>Settings</h2><p>Migration, output location, and update status.</p></div></header>
+        <section class="panel settings-list">
+          <div><span>Regular invoice number</span><input id="regularNumberSetting" type="number" min="1" step="1" /></div>
+          <div><span>HA/YP invoice number</span><input id="haypNumberSetting" type="number" min="1" step="1" /></div>
+          <div><span>Mileage rate (£/mile)</span><input id="mileageRateSetting" type="number" min="0" step="0.01" /></div>
+          <div><span>Invoice templates</span><strong id="templateStatus">-</strong></div>
+          <div><span>Data file</span><code id="dataPath">-</code></div>
+          <div><span>Output folder</span><code id="outputPath">-</code></div>
+          <button id="saveSettingsButton">Save Settings</button>
+          <button id="importLegacyButton" class="secondary">Import Old Resources Folder</button>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" role="status"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
