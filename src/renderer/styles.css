@@ -24,7 +24,7 @@ body {
   letter-spacing: 0;
 }
 
-button, input, select {
+button, input, select, textarea {
   font: inherit;
 }
 
@@ -237,7 +237,7 @@ label {
   font-weight: 600;
 }
 
-input, select {
+input, select, textarea {
   width: 100%;
   min-height: 38px;
   border: 1px solid #c8d0da;
@@ -246,7 +246,13 @@ input, select {
   background: white;
 }
 
-input.invalid, select.invalid {
+textarea {
+  min-height: 118px;
+  line-height: 1.35;
+  resize: vertical;
+}
+
+input.invalid, select.invalid, textarea.invalid {
   border-color: var(--danger);
   box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
 }
@@ -267,14 +273,29 @@ input.invalid, select.invalid {
 
 .line-form {
   display: grid;
-  grid-template-columns: 150px minmax(240px, 2fr) 120px 120px 120px;
-  gap: 10px;
-  align-items: end;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .line-form .wide {
   min-width: 0;
+}
+
+.line-detail-row {
+  display: grid;
+  grid-template-columns: 170px 150px 150px 1fr 120px;
+  gap: 12px;
+  align-items: end;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e4e9ef;
+  border-radius: 8px;
+}
+
+.line-actions {
+  display: grid;
+  gap: 8px;
+  grid-column: 5;
 }
 
 .expense-form {
@@ -330,7 +351,7 @@ th {
 }
 
 td:last-child, th:last-child {
-  width: 98px;
+  width: 178px;
   text-align: right;
 }
 
@@ -421,8 +442,8 @@ code {
     height: auto;
     overflow: visible;
   }
-  .line-form { grid-template-columns: 1fr 1fr; }
-  .line-form .wide { grid-column: span 2; }
+  .line-detail-row { grid-template-columns: 1fr 1fr; }
+  .line-actions { grid-template-columns: 1fr 1fr; }
   .expense-form { grid-template-columns: 1fr 1fr; }
   .expense-form .wide { grid-column: span 2; }
   .invoice-options {

@@ -2,6 +2,7 @@ let state = null;
 let lineItems = [];
 let toastTimer = null;
 let creatingInvoice = false;
+let editingLineIndex = null;
 const MAX_LINE_ITEMS = 4;
 
 const $ = (id) => document.getElementById(id);
@@ -60,8 +61,9 @@ function clearInvoice() {
   fillContact(null);
   $("jobDescription").value = "";
   $("haypInvoice").checked = false;
-  $("pdfNeeded").checked = true;
+  $("pdfNeeded").checked = false;
   lineItems = [];
+  resetLineForm();
   render();
 }
 
@@ -132,15 +134,21 @@ function renderLineItems() {
       <td>${money(item.price)}</td>
       <td>${item.miles ? `${item.miles}` : ""}</td>
       <td>${money(lineTotal(item))}</td>
-      <td><button class="danger table-action" data-remove-line="${index}">Remove</button></td>
+      <td>
+        <div class="history-actions">
+          <button class="secondary table-action" data-edit-line="${index}">Edit</button>
+          <button class="danger table-action" data-remove-line="${index}">Remove</button>
+        </div>
+      </td>
     </tr>
   `).join("");
   $("invoiceTotal").textContent = money(invoiceTotal());
   const limitReached = lineItems.length >= MAX_LINE_ITEMS;
   $("lineCountBadge").textContent = `${lineItems.length}/${MAX_LINE_ITEMS}`;
   $("lineCountBadge").classList.toggle("limit-reached", limitReached);
-  $("addLineButton").disabled = limitReached;
-  $("addLineButton").textContent = limitReached ? "Max 4" : "Add";
+  $("addLineButton").disabled = limitReached && editingLineIndex === null;
+  $("addLineButton").textContent = editingLineIndex === null ? (limitReached ? "Max 4" : "Add") : "Update";
+  $("cancelLineEditButton").hidden = editingLineIndex === null;
 }
 
 function renderExpenses() {
@@ -190,7 +198,7 @@ function clearFieldErrors(inputIds) {
 function validateLineItemForm() {
   clearFieldErrors(["lineDate", "lineDescription", "linePrice"]);
   let valid = true;
-  if (lineItems.length >= MAX_LINE_ITEMS) {
+  if (lineItems.length >= MAX_LINE_ITEMS && editingLineIndex === null) {
     showToast("The invoice templates support up to four line items.");
     return false;
   }
@@ -207,6 +215,28 @@ function validateLineItemForm() {
     valid = false;
   }
   return valid;
+}
+
+function resetLineForm() {
+  editingLineIndex = null;
+  $("lineDate").value = todayIso();
+  $("lineDescription").value = "";
+  $("linePrice").value = "";
+  $("lineMiles").value = "";
+  clearFieldErrors(["lineDate", "lineDescription", "linePrice"]);
+  renderLineItems();
+}
+
+function loadLineForEditing(index) {
+  const item = lineItems[index];
+  if (!item) return;
+  editingLineIndex = index;
+  $("lineDate").value = item.date || todayIso();
+  $("lineDescription").value = item.description || "";
+  $("linePrice").value = item.price;
+  $("lineMiles").value = item.miles || "";
+  clearFieldErrors(["lineDate", "lineDescription", "linePrice"]);
+  renderLineItems();
 }
 
 function validateInvoiceForm() {
@@ -311,20 +341,34 @@ function bindInvoice() {
       price: Number($("linePrice").value),
       miles: Number($("lineMiles").value || 0)
     };
-    lineItems.push(item);
-    $("lineDescription").value = "";
-    $("linePrice").value = "";
-    $("lineMiles").value = "";
-    clearFieldErrors(["lineDate", "lineDescription", "linePrice"]);
-    renderLineItems();
+    if (editingLineIndex === null) {
+      lineItems.push(item);
+      showToast("Line item added.");
+    } else {
+      lineItems[editingLineIndex] = item;
+      showToast("Line item updated.");
+    }
+    resetLineForm();
   });
 
   $("lineItemsBody").addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-edit-line]");
+    if (editButton) {
+      loadLineForEditing(Number(editButton.dataset.editLine));
+      return;
+    }
     const button = event.target.closest("[data-remove-line]");
     if (!button) return;
-    lineItems.splice(Number(button.dataset.removeLine), 1);
-    renderLineItems();
+    const removeIndex = Number(button.dataset.removeLine);
+    lineItems.splice(removeIndex, 1);
+    if (editingLineIndex === removeIndex) resetLineForm();
+    else {
+      if (editingLineIndex !== null && removeIndex < editingLineIndex) editingLineIndex -= 1;
+      renderLineItems();
+    }
   });
+
+  $("cancelLineEditButton").addEventListener("click", resetLineForm);
 
   $("createInvoiceButton").addEventListener("click", async () => {
     if (creatingInvoice) return;

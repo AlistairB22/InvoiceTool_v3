@@ -77,15 +77,20 @@
               <div class="invoice-options">
                 <span>Invoice options</span>
                 <label><input type="checkbox" id="haypInvoice" /> HA/YP</label>
-                <label><input type="checkbox" id="pdfNeeded" checked /> PDF</label>
+                <label><input type="checkbox" id="pdfNeeded" /> PDF</label>
               </div>
             </div>
             <div class="line-form">
-              <div class="field"><label for="lineDate">Date</label><input type="date" id="lineDate" /></div>
-              <div class="field wide"><label for="lineDescription">Description</label><input id="lineDescription" /></div>
-              <div class="field"><label for="linePrice">Price</label><input id="linePrice" type="number" min="0" step="0.01" /></div>
-              <div class="field"><label for="lineMiles">Miles</label><input id="lineMiles" type="number" min="0" step="1" /></div>
-              <button id="addLineButton">Add</button>
+              <div class="field wide"><label for="lineDescription">Description</label><textarea id="lineDescription" rows="5"></textarea></div>
+              <div class="line-detail-row">
+                <div class="field"><label for="lineDate">Date</label><input type="date" id="lineDate" /></div>
+                <div class="field"><label for="linePrice">Price</label><input id="linePrice" type="number" min="0" step="0.01" /></div>
+                <div class="field"><label for="lineMiles">Miles</label><input id="lineMiles" type="number" min="0" step="1" /></div>
+                <div class="line-actions">
+                  <button id="addLineButton">Add</button>
+                  <button id="cancelLineEditButton" class="secondary" hidden>Cancel</button>
+                </div>
+              </div>
             </div>
             <table>
               <thead><tr><th>Date</th><th>Description</th><th>Price</th><th>Miles</th><th>Total</th><th></th></tr></thead>
