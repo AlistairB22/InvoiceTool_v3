@@ -481,9 +481,14 @@ function bindReportsAndSettings() {
   });
   $("openOutputButton").addEventListener("click", () => window.invoiceApi.openOutputFolder());
   $("updateButton").addEventListener("click", async () => showToast(await window.invoiceApi.checkForUpdates()));
+  $("installUpdateButton").addEventListener("click", async () => showToast(await window.invoiceApi.installUpdate()));
   window.invoiceApi.onUpdateMessage((message) => {
     $("statusText").textContent = message;
     showToast(message);
+  });
+  window.invoiceApi.onUpdateStatus(({ status, message }) => {
+    $("statusText").textContent = message;
+    $("installUpdateButton").hidden = status !== "ready";
   });
 }
 

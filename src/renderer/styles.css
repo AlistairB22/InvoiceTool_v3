@@ -126,6 +126,17 @@ nav { display: grid; gap: 8px; }
   padding-top: 16px;
 }
 
+.install-update-button {
+  background: #2178d4;
+  border-color: #2178d4;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.install-update-button:hover {
+  background: #1a66b6;
+}
+
 main {
   min-width: 0;
   height: 100vh;

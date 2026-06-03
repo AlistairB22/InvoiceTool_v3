@@ -14,7 +14,11 @@ contextBridge.exposeInMainWorld("invoiceApi", {
   openOutputFolder: () => ipcRenderer.invoke("shell:openOutputFolder"),
   openFile: (filePath) => ipcRenderer.invoke("shell:openFile", filePath),
   checkForUpdates: () => ipcRenderer.invoke("updates:check"),
+  installUpdate: () => ipcRenderer.invoke("updates:install"),
   onUpdateMessage: (handler) => {
     ipcRenderer.on("updates:message", (_event, message) => handler(message));
+  },
+  onUpdateStatus: (handler) => {
+    ipcRenderer.on("updates:status", (_event, status) => handler(status));
   }
 });

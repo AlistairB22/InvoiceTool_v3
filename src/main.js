@@ -11,6 +11,8 @@ const PizZip = require("pizzip");
 const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 let mainWindow;
+let updateReadyToInstall = false;
+let installingUpdate = false;
 
 function assetPath(fileName) {
   const packaged = path.join(process.resourcesPath || "", "assets", fileName);
@@ -374,18 +376,41 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+});
+
+app.on("before-quit", (event) => {
+  if (updateReadyToInstall && !installingUpdate) {
+    event.preventDefault();
+    installDownloadedUpdate();
+  }
 });
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
 
-autoUpdater.on("checking-for-update", () => mainWindow?.webContents.send("updates:message", "Checking for updates..."));
-autoUpdater.on("update-available", () => mainWindow?.webContents.send("updates:message", "Update found. Downloading it now."));
-autoUpdater.on("update-not-available", () => mainWindow?.webContents.send("updates:message", "Invoice Tool is up to date."));
-autoUpdater.on("update-downloaded", () => mainWindow?.webContents.send("updates:message", "Update downloaded. It will install when the app closes."));
-autoUpdater.on("error", () => mainWindow?.webContents.send("updates:message", "Update check could not complete."));
+function sendUpdateStatus(status, message) {
+  mainWindow?.webContents.send("updates:status", { status, message });
+  mainWindow?.webContents.send("updates:message", message);
+}
+
+function installDownloadedUpdate() {
+  if (!updateReadyToInstall || installingUpdate) return;
+  installingUpdate = true;
+  sendUpdateStatus("installing", "Installing update...");
+  setImmediate(() => autoUpdater.quitAndInstall(false, true));
+}
+
+autoUpdater.on("checking-for-update", () => sendUpdateStatus("checking", "Checking for updates..."));
+autoUpdater.on("update-available", () => sendUpdateStatus("downloading", "Update found. Downloading it now."));
+autoUpdater.on("update-not-available", () => sendUpdateStatus("idle", "Invoice Tool is up to date."));
+autoUpdater.on("update-downloaded", () => {
+  updateReadyToInstall = true;
+  sendUpdateStatus("ready", "Update downloaded. Restart to install it.");
+});
+autoUpdater.on("error", () => sendUpdateStatus("error", "Update check could not complete."));
 
 ipcMain.handle("state:get", () => publicState());
 
@@ -546,4 +571,10 @@ ipcMain.handle("updates:check", async () => {
   } catch {
     return "Update check could not complete.";
   }
+});
+
+ipcMain.handle("updates:install", () => {
+  if (!updateReadyToInstall) return "No downloaded update is ready to install.";
+  installDownloadedUpdate();
+  return "Installing update...";
 });
