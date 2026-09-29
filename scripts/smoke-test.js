@@ -5,6 +5,9 @@ const childProcess = require("child_process");
 const required = [
   "package.json",
   "src/main.js",
+  "src/pdf-export.js",
+  "src/pdf-renderer.html",
+  "src/pdf-renderer.js",
   "src/preload.js",
   "src/renderer/index.html",
   "src/renderer/app.js",
@@ -18,7 +21,7 @@ for (const file of required) {
   }
 }
 
-for (const file of ["src/main.js", "src/preload.js", "src/renderer/app.js"]) {
+for (const file of ["src/main.js", "src/pdf-export.js", "src/pdf-renderer.js", "src/preload.js", "src/renderer/app.js"]) {
   childProcess.execFileSync(process.execPath, ["--check", path.join(__dirname, "..", file)], { stdio: "inherit" });
 }
 

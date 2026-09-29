@@ -9,7 +9,7 @@ A local Windows desktop invoice tool rebuilt from the old Python/Tkinter app.
 - Starts with an empty local data store.
 - Can import a v2 `Resources` folder from Settings.
 - Does not bundle client, invoice, expense, or template data in the installer.
-- Creates professional DOCX invoices and optional PDF copies.
+- Creates professional DOCX invoices and optional PDF copies using the imported templates. PDF creation is built into the app and does not require Microsoft Word.
 - Exports revenue and monthly revenue/expense reports as Excel-compatible CSV files.
 - Checks GitHub releases for updates when an internet connection is available.
 
