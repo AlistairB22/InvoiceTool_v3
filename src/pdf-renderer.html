@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Invoice PDF</title>
+    <style>
+      @page { size: A4; margin: 0; }
+      html, body { margin: 0; padding: 0; background: white; }
+      .regular-invoice .docx-wrapper > section > header { height: 12px !important; min-height: 0 !important; }
+      .regular-invoice .docx-wrapper > section > header > p { height: 0 !important; min-height: 0 !important; margin: 0 !important; }
+      @media print {
+        .docx-wrapper { padding: 0 !important; background: white !important; }
+        .docx-wrapper > section { box-shadow: none !important; margin: 0 !important; }
+        .regular-invoice .docx-wrapper > section { position: relative; }
+        .regular-invoice .docx-wrapper > section > header img,
+        .regular-invoice .docx-wrapper > section > footer img { left: -36pt !important; }
+        .regular-invoice .docx-wrapper > section > footer div { top: 0 !important; }
+        .regular-invoice .docx-wrapper > section > article { position: relative; z-index: 1; }
+        .regular-invoice .docx-wrapper > section > article > table:first-child {
+          position: absolute;
+          top: 0;
+          right: 0;
+          float: none !important;
+          margin: 0 !important;
+        }
+        .regular-invoice .docx-wrapper > section > footer {
+          position: absolute;
+          bottom: 0;
+          left: 36pt;
+          right: 36pt;
+          z-index: 0;
+        }
+        .regular-invoice .invoice-totals {
+          display: table;
+          width: 245pt;
+          margin: 10pt 0 0 auto;
+          font-size: 12pt;
+        }
+        .regular-invoice .invoice-totals > div { display: table-row; }
+        .regular-invoice .invoice-totals strong,
+        .regular-invoice .invoice-totals span { display: table-cell; height: 15pt; vertical-align: middle; }
+        .regular-invoice .invoice-totals strong { padding-right: 8pt; text-align: right; }
+        .regular-invoice .invoice-totals span {
+          width: 106pt;
+          padding-left: 8pt;
+          border: .5pt solid #333;
+        }
+      }
+    </style>
+    <script src="../node_modules/jszip/dist/jszip.min.js"></script>
+    <script src="../node_modules/docx-preview/dist/docx-preview.min.js"></script>
+    <script src="pdf-renderer.js" defer></script>
+  </head>
+  <body>
+    <main id="invoice"></main>
+  </body>
+</html>

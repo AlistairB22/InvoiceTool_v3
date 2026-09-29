@@ -2,11 +2,11 @@ const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-const childProcess = require("child_process");
 const { autoUpdater } = require("electron-updater");
 const { parse } = require("csv-parse/sync");
 const Docxtemplater = require("docxtemplater");
 const PizZip = require("pizzip");
+const { createPdfFromDocx } = require("./pdf-export");
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 
@@ -276,56 +276,6 @@ function invoiceTemplateData(invoice, store) {
   return data;
 }
 
-function createHtmlInvoice(invoice, store) {
-  const rows = invoice.lineItems.map((item) => {
-    const miles = Number(item.miles || 0);
-    const mileageCost = miles * store.settings.mileageRate;
-    return `<tr><td>${displayDate(item.date)}</td><td>${escapeHtml(item.description)}</td><td>${currency(item.price)}</td><td>${miles ? `${miles} miles (${currency(mileageCost)})` : ""}</td><td>${currency(totalForLine(item, store.settings.mileageRate))}</td></tr>`;
-  }).join("");
-  const address = [invoice.address1, invoice.address2, invoice.address3, invoice.address4, invoice.postcode].filter(Boolean).map(escapeHtml).join("<br>");
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-    body{font-family:Arial,sans-serif;color:#111827;margin:48px} h1{font-size:34px;margin:0 0 24px} .meta{float:right;text-align:right} table{width:100%;border-collapse:collapse;margin-top:32px} th,td{border-bottom:1px solid #d1d5db;padding:10px;text-align:left} th{background:#f3f4f6} .total{text-align:right;font-size:24px;font-weight:700;margin-top:24px}
-  </style></head><body><div class="meta">Invoice ${invoice.invoiceNumber}<br>${displayDate(invoice.date)}</div><h1>${invoice.hayp ? "HA/YP Invoice" : "Invoice"}</h1><h2>${escapeHtml(invoice.clientName)}</h2><p>${address}</p><p>${invoice.vendorNumber ? `Vendor number: ${escapeHtml(invoice.vendorNumber)}` : ""}</p><h3>${escapeHtml(invoice.jobDescription || "")}</h3><table><thead><tr><th>Date</th><th>Description</th><th>Cost</th><th>Mileage</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table><div class="total">Total: ${currency(invoice.total)}</div></body></html>`;
-}
-
-function escapeHtml(value) {
-  return String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
-}
-
-async function createPdfInvoice(invoice, store, destination) {
-  await convertDocxToPdf(invoice.outputFiles[0], destination);
-}
-
-function convertDocxToPdf(docxPath, pdfPath) {
-  const script = `
-$ErrorActionPreference = 'Stop'
-$word = New-Object -ComObject Word.Application
-$word.Visible = $false
-$word.DisplayAlerts = 0
-$doc = $null
-try {
-  $doc = $word.Documents.OpenNoRepairDialog('${escapePowerShellString(docxPath)}', $false, $true, $false)
-  $doc.ExportAsFixedFormat('${escapePowerShellString(pdfPath)}', 17)
-} finally {
-  if ($doc -ne $null) { $doc.Close($false) }
-  $word.Quit()
-}
-`;
-  return new Promise((resolve, reject) => {
-    childProcess.execFile("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script], { timeout: 45000, windowsHide: true }, (error) => {
-      if (error) {
-        reject(new Error("PDF export needs Microsoft Word installed locally and able to open without prompts."));
-        return;
-      }
-      resolve();
-    });
-  });
-}
-
-function escapePowerShellString(value) {
-  return String(value).replace(/'/g, "''");
-}
-
 function csvCell(value) {
   const text = String(value ?? "");
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
@@ -448,12 +398,29 @@ ipcMain.handle("invoices:create", async (_event, input) => {
   const folder = input.hayp ? paths().haypDir : paths().regularDir;
   const stem = `${input.hayp ? "InvoiceHAYP" : "InvoiceRegular"}${invoiceNumber}`;
   const docxPath = path.join(folder, `${stem}.docx`);
-  await createDocxInvoice(invoice, store, docxPath);
-  invoice.outputFiles.push(docxPath);
-  if (input.pdfNeeded) {
-    const pdfPath = path.join(folder, `${stem}.pdf`);
-    await createPdfInvoice(invoice, store, pdfPath);
-    invoice.outputFiles.push(pdfPath);
+  const pdfPath = path.join(folder, `${stem}.pdf`);
+  const temporaryDocxPath = path.join(folder, `${stem}.${invoice.id}.tmp.docx`);
+  const temporaryPdfPath = path.join(folder, `${stem}.${invoice.id}.tmp.pdf`);
+  try {
+    await createDocxInvoice(invoice, store, temporaryDocxPath);
+    if (input.pdfNeeded) {
+      try {
+        await createPdfFromDocx(temporaryDocxPath, temporaryPdfPath, { regular: !input.hayp });
+      } catch (error) {
+        throw new Error(`Invoice PDF could not be created: ${error.message}`);
+      }
+    }
+    await fs.promises.rename(temporaryDocxPath, docxPath);
+    invoice.outputFiles.push(docxPath);
+    if (input.pdfNeeded) {
+      await fs.promises.rename(temporaryPdfPath, pdfPath);
+      invoice.outputFiles.push(pdfPath);
+    }
+  } finally {
+    await Promise.all([
+      fs.promises.rm(temporaryDocxPath, { force: true }),
+      fs.promises.rm(temporaryPdfPath, { force: true })
+    ]);
   }
 
   store.invoices.push(invoice);
